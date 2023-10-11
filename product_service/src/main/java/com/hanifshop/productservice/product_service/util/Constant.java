@@ -11,6 +11,11 @@ public final class Constant {
         public static final String updateCategory  = "/product/updatecategory";
         public static final String deleteCategory  = "/product/deletecategory";
         public static final String allCategory  = "/product/category";
+
+        public static final String addProduct  = "/product/add";
+        public static final String updateProduct  = "/product/update";
+        public static final String deleteProduct  = "/product/delete";
+        public static final String allProduct  = "/product/all";
     }
 
 }

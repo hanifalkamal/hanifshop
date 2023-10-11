@@ -10,6 +10,4 @@ public interface ProductCategoryDao extends JpaRepository<ProductCategory, Integ
 
     ProductCategory findByCategoryId(Long categoryId);
 
-    void deleteByCategoryId(Long categoryId);
-
 }

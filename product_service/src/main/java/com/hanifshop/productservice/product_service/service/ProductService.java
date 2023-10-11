@@ -1,5 +1,7 @@
 package com.hanifshop.productservice.product_service.service;
 
+import com.hanifshop.productservice.product_service.dto.ProductDto;
+
 import java.util.Map;
 
 /**
@@ -12,5 +14,10 @@ public interface ProductService {
     Map<String, Object> DeleteProductCategory(Long categoryId);
     Map<String, Object> UpdateProductCategory(Long categoryId, String categoryName);
     Map<String, Object> ListProductCategory();
+
+    Map<String, Object> AddProduct(ProductDto dto);
+    Map<String, Object> DeleteProduct(ProductDto dto);
+    Map<String, Object> UpdateProduct(ProductDto dto);
+    Map<String, Object> ListProduct(ProductDto dto);
 
 }
