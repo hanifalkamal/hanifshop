@@ -37,6 +37,7 @@ public class Order {
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
+
     public Map<String, Object> createResponse(){
         return Stream.of(
                 Map.entry("orderId", this.orderId),

@@ -3,6 +3,7 @@ package com.hanifshop.order_service.service.impl;
 import com.hanifshop.order_service.dto.OrderDetailDto;
 import com.hanifshop.order_service.dto.OrderDto;
 import com.hanifshop.order_service.model.Order;
+import com.hanifshop.order_service.model.OrderDetail;
 import com.hanifshop.order_service.repository.OrderDao;
 import com.hanifshop.order_service.repository.OrderDetailDao;
 import com.hanifshop.order_service.service.OrderService;
@@ -76,7 +77,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Map<String, Object> createOrderDetail(OrderDetailDto dto) {
-        return null;
+        try {
+            OrderDetail orderDetail = dto.toOrderDetail();
+            orderDetailDao.save(orderDetail);
+
+            return EngineUtils.createSuccessReponse(200,
+                    orderDetail.createResponse(), Constant.ControllerRoute.createOrder);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.createOrder);
+        }
     }
 
     @Override

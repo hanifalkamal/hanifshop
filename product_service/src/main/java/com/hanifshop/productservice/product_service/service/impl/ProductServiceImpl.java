@@ -1,6 +1,7 @@
 package com.hanifshop.productservice.product_service.service.impl;
 
 import com.hanifshop.productservice.product_service.dto.ProductDto;
+import com.hanifshop.productservice.product_service.grpc.KafkaProducer;
 import com.hanifshop.productservice.product_service.model.Product;
 import com.hanifshop.productservice.product_service.model.ProductCategory;
 import com.hanifshop.productservice.product_service.repository.ProductCategoryDao;
@@ -26,6 +27,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductCategoryDao productCategoryDao;
+
+    @Autowired
+    private KafkaProducer kafkaProducer;
 
     @Autowired
     ProductDao productDao;
@@ -181,6 +185,8 @@ public class ProductServiceImpl implements ProductService {
             if (listProduct.isEmpty()){
                 return EngineUtils.createSuccessReponse(200, "Product is empty", Constant.ControllerRoute.allCategory);
             }
+
+            kafkaProducer.sendKafkaMessages(listProduct);
 
             List<Map<String, Object>> productList = listProduct.stream()
                     .map(product -> {
