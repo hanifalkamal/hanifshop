@@ -1,4 +1,4 @@
-package com.hanifshop.productservice.product_service.grpc;
+package com.hanifshop.productservice.product_service.stream;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +15,7 @@ public class KafkaTopicConfiig {
 
     @Bean
     public NewTopic productTopic(){
-        return TopicBuilder.name("product").build();
+        return TopicBuilder.name("com-product-all").build();
     }
 
 }

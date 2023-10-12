@@ -7,6 +7,7 @@ import com.hanifshop.order_service.model.OrderDetail;
 import com.hanifshop.order_service.repository.OrderDao;
 import com.hanifshop.order_service.repository.OrderDetailDao;
 import com.hanifshop.order_service.service.OrderService;
+import com.hanifshop.order_service.stream.KafkaProducer;
 import com.hanifshop.order_service.util.Constant;
 import com.hanifshop.order_service.util.EngineUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class OrderServiceImpl implements OrderService {
@@ -23,6 +27,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     OrderDetailDao orderDetailDao;
+
+    @Autowired
+    private KafkaProducer kafkaProducer;
+
+    private final Map<Long, CompletableFuture<Boolean>> validationFutures = new ConcurrentHashMap<>();
+
 
     @Override
     public Map<String, Object> createOrder(OrderDto orderDto) {
@@ -78,11 +88,39 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Map<String, Object> createOrderDetail(OrderDetailDto dto) {
         try {
-            OrderDetail orderDetail = dto.toOrderDetail();
-            orderDetailDao.save(orderDetail);
 
-            return EngineUtils.createSuccessReponse(200,
-                    orderDetail.createResponse(), Constant.ControllerRoute.createOrder);
+            if (dto.getOrderId() == 0L || dto.getOrderId() == null)
+                throw  new Exception("Order ID is mandatory");
+
+            if (dto.getProductId() == 0L || dto.getProductId() == null)
+                throw new Exception("Product ID is mandatory");
+
+            if (dto.getQuantity() == 0)
+                throw new Exception("Qty is mandatory");
+
+            Order order = checkOrderAvailablity(dto.getOrderId());
+
+
+            CompletableFuture<Boolean> validationFuture = new CompletableFuture<>();
+            validationFutures.put(dto.getProductId(), validationFuture);
+
+            //TAMBAHKAN UNTUK REQUEST HARGA KE MODUL PRODUCT
+            kafkaProducer.sendValidationRequest(dto.getProductId().toString(), dto.getQuantity());
+
+            validationFuture.thenAccept(isQtyValid -> {
+                if (!isQtyValid){
+                    validationFuture.complete(false);
+                } else {
+                    validationFuture.complete(true);
+                }
+            });
+
+            Boolean isQtyValid = validationFuture.get();
+
+            if (!isQtyValid)
+                throw new Exception("insufficient product");
+
+            return executeCreateOrderDetail(dto);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -98,5 +136,28 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Map<String, Object> listProducts() {
         return null;
+    }
+
+    @Override
+    public Map<String, Object> executeCreateOrderDetail(OrderDetailDto dto) {
+        OrderDetail orderDetail = dto.toOrderDetail();
+        orderDetailDao.save(orderDetail);
+
+        return EngineUtils.createSuccessReponse(200,
+                orderDetail.createResponse(), Constant.ControllerRoute.createOrder);
+    }
+
+    @Override
+    public Map<Long, CompletableFuture<Boolean>> getValidationFutures() {
+        return validationFutures;
+    }
+
+    Order checkOrderAvailablity(Long orderId) throws Exception {
+        List<Order> orders = orderDao.findByOrderId(orderId);
+
+        if (orders.isEmpty())
+            throw new Exception("Order not found");
+
+        return orders.get(0);
     }
 }

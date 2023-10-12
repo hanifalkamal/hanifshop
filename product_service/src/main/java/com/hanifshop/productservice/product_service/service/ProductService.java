@@ -20,4 +20,6 @@ public interface ProductService {
     Map<String, Object> UpdateProduct(ProductDto dto);
     Map<String, Object> ListProduct(ProductDto dto);
 
+    Boolean isQtyProductValid(Long productId, int requestedQty);
+
 }

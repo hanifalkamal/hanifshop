@@ -1,7 +1,7 @@
 package com.hanifshop.productservice.product_service.service.impl;
 
 import com.hanifshop.productservice.product_service.dto.ProductDto;
-import com.hanifshop.productservice.product_service.grpc.KafkaProducer;
+import com.hanifshop.productservice.product_service.stream.KafkaProducer;
 import com.hanifshop.productservice.product_service.model.Product;
 import com.hanifshop.productservice.product_service.model.ProductCategory;
 import com.hanifshop.productservice.product_service.repository.ProductCategoryDao;
@@ -186,8 +186,6 @@ public class ProductServiceImpl implements ProductService {
                 return EngineUtils.createSuccessReponse(200, "Product is empty", Constant.ControllerRoute.allCategory);
             }
 
-            kafkaProducer.sendKafkaMessages(listProduct);
-
             List<Map<String, Object>> productList = listProduct.stream()
                     .map(product -> {
                         Map<String, Object> categoryMap = new HashMap<>();
@@ -207,6 +205,17 @@ public class ProductServiceImpl implements ProductService {
         }catch (Exception e){
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.allProduct);
+        }
+    }
+
+    @Override
+    public Boolean isQtyProductValid(Long productId, int requestedQty) {
+        try {
+            Product product = productDao.findByProductId(productId);
+            return product.getStockQuantity() >= requestedQty;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
