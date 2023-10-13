@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration
+status="INFO">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{ISO8601}] [%5p] - %-20c{5} - %m%n"/>
+        </Console>
+
+        <RollingFile name="Rolling"  fileName="order-services-logs/order.log" filePattern="order-services-logs/order.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}] [%5p] - %-20c{5} - %m%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+        </RollingFile>
+
+
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="Rolling"/>
+        </Root>
+    </Loggers>
+</Configuration>

@@ -17,7 +17,7 @@ public class OrderDto {
     private String status;
     private BigDecimal totalAmount;
 
-    public static OrderDto fromOrder(OrderDto order) {
+    public static OrderDto fromOrder(Order order) {
         OrderDto dto = new OrderDto();
         dto.setOrderId(order.getOrderId());
         dto.setOrderNumber(order.getOrderNumber());

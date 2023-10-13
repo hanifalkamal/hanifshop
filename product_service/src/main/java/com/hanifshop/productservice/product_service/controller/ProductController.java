@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author Hanif al kamal 11/10/2023
  * @contact hanif.alkamal@gmail.com
  */
-@Controller
 public interface ProductController {
 
     @GetMapping(Constant.ControllerRoute.allCategory)

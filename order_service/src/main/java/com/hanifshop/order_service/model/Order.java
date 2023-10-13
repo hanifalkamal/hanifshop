@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @Entity
-@Table(name = "order")
+@Table(name = "product_order")
 public class Order {
 
     @Id
