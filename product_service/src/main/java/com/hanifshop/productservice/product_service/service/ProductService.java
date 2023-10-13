@@ -1,6 +1,7 @@
 package com.hanifshop.productservice.product_service.service;
 
 import com.hanifshop.productservice.product_service.dto.ProductDto;
+import com.hanifshop.productservice.product_service.model.Product;
 
 import java.util.Map;
 
@@ -21,5 +22,6 @@ public interface ProductService {
     Map<String, Object> ListProduct(ProductDto dto);
 
     Boolean isQtyProductValid(Long productId, int requestedQty);
+    Product getProduct(Long productId);
 
 }

@@ -219,6 +219,15 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
+    public Product getProduct(Long productId) {
+        try {
+            return productDao.findByProductId(productId);
+        }catch (Exception e){
+            return null;
+        }
+    }
+
     ProductCategory checkCategoryAvailability(Long categoryId) throws Exception {
         ProductCategory productCategory = productCategoryDao.findByCategoryId(categoryId);
 

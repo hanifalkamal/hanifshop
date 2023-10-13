@@ -1,10 +1,13 @@
 package com.hanifshop.productservice.product_service.stream;
 
+import com.hanifshop.productservice.product_service.model.Product;
 import com.hanifshop.productservice.product_service.service.ProductService;
+import com.hanifshop.productservice.product_service.util.PojoJsonMapper;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jackson.map.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.ConsumerFactory;
@@ -35,18 +38,22 @@ public class KafkaConsumer {
 
     @KafkaListener(id = "product-validation-consumer", topics = "product-validation-topic")
     public void listen(ConsumerRecord<String, String> record) {
-        // Mendengarkan pesan validasi yang dikirim oleh layanan "Order"
+
         logger.info("### Message Receive From Topics : product-validation-topic");
         logger.info("   Message :   " + record.value());
 
-        String[] values = record.value().split(":");
-        Long productId = Long.parseLong(values[1]);
-        int requestedQty = Integer.parseInt(values[2]);
+        Map<String, String> data = PojoJsonMapper.fromJson(record.value(), Map.class);
 
-        Boolean isQtyValid = productService.isQtyProductValid(productId, requestedQty);
+        Product product = productService.getProduct(Long.parseLong(data.get("productId")));
 
-        String validationResponse = "ValidationResult:" + productId + ":" + requestedQty + ":" + isQtyValid;
-        kafkaProducer.sendKafkaMessage("validation-result-topic", validationResponse);
+        if (product == null) {
+            Map<String, String> failedResult = new HashMap<>();
+            failedResult.put("error", "Product not found");
+            failedResult.put("productId", data.get("productId"));
+            kafkaProducer.sendKafkaMessage("validation-result-topic", PojoJsonMapper.toJson(failedResult));
+        } else {
+            kafkaProducer.sendKafkaMessage("validation-result-topic", PojoJsonMapper.toJson(product));
+        }
     }
 
 
