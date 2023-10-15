@@ -12,7 +12,7 @@ import java.util.Date;
  */
 @Getter
 @Setter
-public class ProductDto {
+public class ProductDto extends BaseDto{
 
     private Long productId = 0L;
     private String productName = "";

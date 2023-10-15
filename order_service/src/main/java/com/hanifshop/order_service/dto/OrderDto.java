@@ -9,10 +9,9 @@ import java.util.Date;
 
 @Getter
 @Setter
-public class OrderDto {
+public class OrderDto extends BaseDto {
     private Long orderId;
     private String orderNumber;
-    private Long customerId;
     private Date orderDate;
     private String status;
     private BigDecimal totalAmount;

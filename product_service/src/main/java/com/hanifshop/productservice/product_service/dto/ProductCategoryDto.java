@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class ProductCategoryDto {
+public class ProductCategoryDto extends BaseDto{
 
     private Long categoryId = 0L;
     private String categoryName = "";

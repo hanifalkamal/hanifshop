@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class OrderDetailDto {
+public class OrderDetailDto extends BaseDto {
     private Long orderDetailId;
     private Long orderId;
     private Long productId;

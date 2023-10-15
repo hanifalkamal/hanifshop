@@ -1,0 +1,20 @@
+package com.hanifshop.productservice.product_service.interceptor;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import java.util.List;
+
+/**
+ * @author Hanif al kamal 16/10/2023
+ * @contact hanif.alkamal@gmail.com
+ */
+@Configuration
+public class WebMvcConfig extends WebMvcConfigurerAdapter {
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+        argumentResolvers.add(new TokenExtractor());
+    }
+}

@@ -1,6 +1,8 @@
 package com.hanifshop.order_service.util;
 
 
+import com.hanifshop.order_service.repository.SessionDao;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +43,14 @@ public final class EngineUtils {
         result.put("data", data);
         result.put("path", path);
         return result;
+    }
+
+    public static Boolean isValidToken(SessionDao sessionDao, String userId, String token){
+        String redisKey = "auth_token:" + userId;
+        String storedToken = sessionDao.findSessionByRedisKey(redisKey);
+
+        return (token.equals(storedToken));
+
     }
 
 

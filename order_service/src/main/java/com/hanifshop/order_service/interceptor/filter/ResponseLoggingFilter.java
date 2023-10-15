@@ -4,7 +4,9 @@ import com.hanifshop.order_service.util.EngineUtils;
 import com.hanifshop.order_service.util.PojoJsonMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.cglib.proxy.UndeclaredThrowableException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.NestedServletException;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +52,7 @@ public class ResponseLoggingFilter implements Filter {
 
             wrappedResponse.copyBodyToResponse();
         } catch (Exception e) {
+            e.printStackTrace();
             requestId = (String) servletRequest.getAttribute("requestId");
             httpResponse.setStatus(500);
             httpResponse.setContentType("application/json");

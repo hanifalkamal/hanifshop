@@ -2,6 +2,7 @@ package com.hanifshop.productservice.product_service.controller;
 
 import com.hanifshop.productservice.product_service.dto.ProductCategoryDto;
 import com.hanifshop.productservice.product_service.dto.ProductDto;
+import com.hanifshop.productservice.product_service.interceptor.Token;
 import com.hanifshop.productservice.product_service.util.Constant;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -20,17 +21,17 @@ public interface ProductController {
 
     @PostMapping(Constant.ControllerRoute.updateCategory)
     ResponseEntity<?> updateProductCategory(
-            ProductCategoryDto productCategoryDto
+            ProductCategoryDto productCategoryDto, @Token String token
     );
 
     @PostMapping(Constant.ControllerRoute.addCategory)
     ResponseEntity<?> addProductCategory(
-            ProductCategoryDto productCategoryDto
+            ProductCategoryDto productCategoryDto, @Token String token
     );
 
     @PostMapping(Constant.ControllerRoute.deleteCategory)
     ResponseEntity<?> removeProductCategory(
-            ProductCategoryDto productCategoryDto
+            ProductCategoryDto productCategoryDto, @Token String token
     );
 
     @GetMapping(Constant.ControllerRoute.allProduct)
@@ -40,17 +41,17 @@ public interface ProductController {
 
     @PostMapping(Constant.ControllerRoute.addProduct)
     ResponseEntity<?> addProduct(
-            ProductDto productDto
+            ProductDto productDto, @Token String token
     );
 
     @PostMapping(Constant.ControllerRoute.updateProduct)
     ResponseEntity<?> updateProduct(
-            ProductDto productDto
+            ProductDto productDto, @Token String token
     );
 
     @PostMapping(Constant.ControllerRoute.deleteProduct)
     ResponseEntity<?> removeProduct(
-            ProductDto productDto
+            ProductDto productDto, @Token String token
     );
 
 

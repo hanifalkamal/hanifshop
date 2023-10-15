@@ -3,6 +3,7 @@ package com.hanifshop.order_service.controller.impl;
 import com.hanifshop.order_service.controller.OrderController;
 import com.hanifshop.order_service.dto.OrderDetailDto;
 import com.hanifshop.order_service.dto.OrderDto;
+import com.hanifshop.order_service.interceptor.ValidateSession;
 import com.hanifshop.order_service.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,8 @@ public class OrderControllerImpl implements OrderController {
     private OrderService orderService;
 
     @Override
-    public ResponseEntity<?> listOrder(OrderDto orderDto) {
+    @ValidateSession
+    public ResponseEntity<?> listOrder(OrderDto orderDto, String token) {
         Map<String, Object> mapping = orderService.listOrder(orderDto);
         return new ResponseEntity<>(mapping,
                 mapping.containsKey("error") ?
@@ -32,8 +34,9 @@ public class OrderControllerImpl implements OrderController {
     }
 
     @Override
-    public ResponseEntity<?> createOrder(OrderDto orderDto) {
-        Map<String, Object> mapping = orderService.createOrder(orderDto);
+    @ValidateSession
+    public ResponseEntity<?> createOrder(OrderDto orderDto, String token) {
+        Map<String, Object> mapping = orderService.createOrder(orderDto, token);
         return new ResponseEntity<>(mapping,
                 mapping.containsKey("error") ?
                         HttpStatus.valueOf(
@@ -42,8 +45,9 @@ public class OrderControllerImpl implements OrderController {
     }
 
     @Override
-    public ResponseEntity<?> addOrderDetail(OrderDetailDto orderDetailDto) {
-        Map<String, Object> mapping = orderService.addOrderDetail(orderDetailDto);
+    @ValidateSession
+    public ResponseEntity<?> addOrderDetail(OrderDetailDto orderDetailDto, String token) {
+        Map<String, Object> mapping = orderService.addOrderDetail(orderDetailDto, token);
         return new ResponseEntity<>(mapping,
                 mapping.containsKey("error") ?
                         HttpStatus.valueOf(

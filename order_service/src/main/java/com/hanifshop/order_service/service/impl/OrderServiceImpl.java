@@ -6,6 +6,7 @@ import com.hanifshop.order_service.model.Order;
 import com.hanifshop.order_service.model.OrderDetail;
 import com.hanifshop.order_service.repository.OrderDao;
 import com.hanifshop.order_service.repository.OrderDetailDao;
+import com.hanifshop.order_service.repository.SessionDao;
 import com.hanifshop.order_service.service.OrderService;
 import com.hanifshop.order_service.stream.KafkaProducer;
 import com.hanifshop.order_service.util.Constant;
@@ -14,7 +15,6 @@ import com.hanifshop.order_service.util.HttpUtil;
 import com.hanifshop.order_service.util.PojoJsonMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -50,19 +49,18 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public Map<String, Object> createOrder(OrderDto orderDto) {
+    public Map<String, Object> createOrder(OrderDto orderDto, String bearerToken) {
         try {
+
+            logger.info("Attempt to create order");
 
             Order order = orderDto.toOrder();
 
-            if (order.getOrderNumber() == null)
-                throw new Exception("Order Number not found");
+            if (order.getOrderId() == null)
+                throw new Exception("Order Id not found");
 
             if (order.getCustomerId() == null)
                 throw new Exception("Customer ID not found");
-
-            if (order.getStatus() == null)
-                throw new Exception("Status not found");
 
             order.setOrderDate(new Date());
             order.setTotalAmount(new BigDecimal(0));
@@ -139,7 +137,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Map<String, Object> addOrderDetail(OrderDetailDto dto) {
+    public Map<String, Object> addOrderDetail(OrderDetailDto dto, String token) {
 
         logger.info("Attempt to add Order Detail");
 
@@ -158,6 +156,8 @@ public class OrderServiceImpl implements OrderService {
 
             HttpHeaders requestHeaders = new HttpHeaders();
             requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+            requestHeaders.add(HttpHeaders.AUTHORIZATION, token);
+
             String url = Constant.baseUrl + Constant.getProduct;
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
             uriBuilder.queryParam("productId", dto.getProductId());
@@ -238,15 +238,16 @@ public class OrderServiceImpl implements OrderService {
         return orders.get(0);
     }
 
-    public List<OrderDetail> orderDetailforList(List<OrderDetail> orders) {
+    public List<OrderDetailDto> orderDetailforList(List<OrderDetail> orders) {
         return orders.stream()
                 .map(orderDetail -> {
-                    OrderDetail newOrderDetail = new OrderDetail();
+                    OrderDetailDto newOrderDetail = new OrderDetailDto();
                     newOrderDetail.setOrderDetailId(orderDetail.getOrderDetailId());
                     newOrderDetail.setProductId(orderDetail.getProductId());
                     newOrderDetail.setQuantity(orderDetail.getQuantity());
                     newOrderDetail.setUnitPrice(orderDetail.getUnitPrice());
                     newOrderDetail.setTotalPrice(orderDetail.getTotalPrice());
+                    newOrderDetail.setOrderId(orderDetail.getOrder().getOrderId());
                     return newOrderDetail;
                 })
                 .collect(Collectors.toList());
