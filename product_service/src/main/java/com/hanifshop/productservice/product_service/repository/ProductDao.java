@@ -12,8 +12,11 @@ import java.util.List;
  */
 public interface ProductDao extends JpaRepository<Product, Integer> {
 
-    Product findByProductId(Long productId);
+//    Product findByProductId(Long productId);
 
     List<Product> findByCategory(ProductCategory productCategory);
+
+    List<Product> findByProductId(Long productId);
+    List<Product> findByProductIdAndCategory(Long productId, ProductCategory productCategory);
 
 }

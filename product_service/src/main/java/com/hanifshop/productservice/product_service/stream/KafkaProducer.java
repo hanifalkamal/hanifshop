@@ -1,7 +1,15 @@
 package com.hanifshop.productservice.product_service.stream;
 
 import com.hanifshop.productservice.product_service.model.Product;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.PartitionOffset;
+import org.springframework.kafka.annotation.TopicPartition;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,6 +21,8 @@ import java.util.List;
 
 @Component
 public class KafkaProducer {
+    private final Logger logger =  LogManager.getLogger(KafkaProducer.class);
+
     private final KafkaTemplate<String, Product> kafkaTemplateProduct;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
@@ -34,4 +44,6 @@ public class KafkaProducer {
             kafkaTemplateProduct.send("com-product-all", message);
         }
     }
+
+
 }

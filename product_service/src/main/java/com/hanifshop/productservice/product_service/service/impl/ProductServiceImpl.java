@@ -1,6 +1,7 @@
 package com.hanifshop.productservice.product_service.service.impl;
 
 import com.hanifshop.productservice.product_service.dto.ProductDto;
+import com.hanifshop.productservice.product_service.stream.KafkaConsumer;
 import com.hanifshop.productservice.product_service.stream.KafkaProducer;
 import com.hanifshop.productservice.product_service.model.Product;
 import com.hanifshop.productservice.product_service.model.ProductCategory;
@@ -9,7 +10,15 @@ import com.hanifshop.productservice.product_service.repository.ProductDao;
 import com.hanifshop.productservice.product_service.service.ProductService;
 import com.hanifshop.productservice.product_service.util.Constant;
 import com.hanifshop.productservice.product_service.util.EngineUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.PartitionOffset;
+import org.springframework.kafka.annotation.TopicPartition;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -24,6 +33,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ProductServiceImpl implements ProductService {
+
+    private final Logger logger =  LogManager.getLogger(ProductServiceImpl.class);
 
     @Autowired
     private ProductCategoryDao productCategoryDao;
@@ -178,9 +189,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Map<String, Object> ListProduct(ProductDto dto) {
         try {
-            List<Product> listProduct = dto.getCategoryId() != 0L ?
-                    productDao.findByCategory(checkCategoryAvailability(dto.getCategoryId())) :
-                    productDao.findAll();
+            List<Product> listProduct =
+                    dto.getCategoryId() != 0L && dto.getProductId() != 0L ?
+                            productDao.findByProductIdAndCategory(dto.getProductId(), checkCategoryAvailability(dto.getCategoryId())):
+                    dto.getProductId() != 0L ?
+                            productDao.findByProductId(dto.getProductId()) :
+                    dto.getCategoryId() != 0L ?
+                            productDao.findByCategory(checkCategoryAvailability(dto.getCategoryId())) :
+                            productDao.findAll();
 
             if (listProduct.isEmpty()){
                 return EngineUtils.createSuccessReponse(200, "Product is empty", Constant.ControllerRoute.allCategory);
@@ -211,7 +227,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Boolean isQtyProductValid(Long productId, int requestedQty) {
         try {
-            Product product = productDao.findByProductId(productId);
+            Product product = productDao.findByProductId(productId).get(0);
             return product.getStockQuantity() >= requestedQty;
         } catch (Exception e) {
             e.printStackTrace();
@@ -222,7 +238,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product getProduct(Long productId) {
         try {
-            return productDao.findByProductId(productId);
+            return productDao.findByProductId(productId).get(0);
         }catch (Exception e){
             return null;
         }
@@ -238,7 +254,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     Product checkProductAvailability(Long productId) throws Exception {
-        Product product = productDao.findByProductId(productId);
+        Product product = productDao.findByProductId(productId).get(0);
 
         if (product == null)
             throw new Exception("Product not found");

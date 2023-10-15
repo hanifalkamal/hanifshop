@@ -32,7 +32,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Hanif al kamal 13/10/2023
  * @contact hanif.alkamal@gmail.com
  */
-@Configuration
+//@Configuration
 public class KafkaConsumer implements MessageListener<String, String> {
 
     private final Logger logger =  LogManager.getLogger(KafkaConsumer.class);
@@ -40,7 +40,7 @@ public class KafkaConsumer implements MessageListener<String, String> {
     @Autowired
     private OrderService orderService;
 
-    @KafkaListener(id = "order-validation-consumer", topics = "validation-result-topic")
+//    @KafkaListener(id = "order-validation-consumer", topics = "validation-result-topic")
     public void listen(ConsumerRecord<String, String> record) {
 
         logger.info("### Message Receive From Topics : product-validation-topic");
@@ -73,7 +73,7 @@ public class KafkaConsumer implements MessageListener<String, String> {
 //
 //    }
 
-    @Bean
+//    @Bean
     public ConcurrentMessageListenerContainer<String, String> messageListenerContainer() {
         ContainerProperties containerProps = new ContainerProperties("validation-result-topic");
         Map<String, Object> props = new HashMap<>();

@@ -4,6 +4,7 @@ import com.hanifshop.productservice.product_service.dto.ProductDto;
 import com.hanifshop.productservice.product_service.model.Product;
 import com.hanifshop.productservice.product_service.service.ProductService;
 import com.hanifshop.productservice.product_service.util.PojoJsonMapper;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -12,24 +13,32 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.PartitionOffset;
 import org.springframework.kafka.annotation.TopicPartition;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.MessageListener;
+import org.springframework.kafka.listener.*;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author Hanif al kamal 13/10/2023
  * @contact hanif.alkamal@gmail.com
  */
-@Configuration
-public class KafkaConsumer implements MessageListener<String, String> {
+@Component
+public class KafkaConsumer {
 
     private final Logger logger =  LogManager.getLogger(KafkaConsumer.class);
 
@@ -39,91 +48,30 @@ public class KafkaConsumer implements MessageListener<String, String> {
     @Autowired
     KafkaProducer kafkaProducer;
 
-    @KafkaListener(id = "product-validation-consumer", topicPartitions = {
-            @TopicPartition(topic = "product-validation-topic", partitions = { "0" })})
-    public void listenGetProduct(ConsumerRecord<String, String> record) {
+    @KafkaListener(
+            topicPartitions = @TopicPartition(topic = "rdi",
+                    partitionOffsets = {
+                            @PartitionOffset(partition = "0", initialOffset = "2147483647")}))
+    public void listenToPartition(
+            @Payload String message,
+            @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
 
-        logger.info("### Message Receive From Topics : product-validation-topic");
-        logger.info("   Message :   " + record.value());
 
-        Map<String, String> data = PojoJsonMapper.fromJson(record.value(), Map.class);
+        logger.info("### Message Receive From Topics : rdi");
 
+        logger.info("   Message :   " + message);
+        Map<String, String> data = PojoJsonMapper.fromJson(message, Map.class);
+        logger.info(data.get("productId"));
+        logger.info(data.get("orderQty"));
         Product product = productService.getProduct(Long.parseLong(data.get("productId")));
-
-        if (product == null) {
-            Map<String, String> failedResult = new HashMap<>();
-            failedResult.put("error", "Product not found");
-            failedResult.put("productId", data.get("productId"));
-            kafkaProducer.sendKafkaMessage("validation-result-topic", PojoJsonMapper.toJson(failedResult));
-        } else {
-            kafkaProducer.sendKafkaMessage("validation-result-topic", PojoJsonMapper.toJson(product));
-        }
-    }
-
-    @KafkaListener(id = "product-update-consumer-group", topicPartitions = {
-            @TopicPartition(topic = "product-validation-topic", partitions = { "0" })})
-    public void listenUpdateProduct(ConsumerRecord<String, String> record) {
-        Map<String, String> data = PojoJsonMapper.fromJson(record.value(), Map.class);
-
-        logger.info("### Message Receive From Topics : product-qty-update-topic");
-        logger.info("   Message :   " + record.value());
-
-        Product product = productService.getProduct(Long.parseLong(data.get("productId")));
-
         ProductDto productDto = ProductDto.fromProduct(product);
         Integer orderQty = Integer.parseInt(data.get("orderQty"));
         productDto.setStockQuantity(productDto.getStockQuantity() - orderQty);
 
+        logger.info("QTY = " + productDto.getStockQuantity());
+
         productService.UpdateProduct(productDto);
-    }
 
-    @Bean
-    public ConcurrentMessageListenerContainer<String, String> messageListenerContainer() {
-        ContainerProperties containerProps = new ContainerProperties("product-qty-update-topic");
-//        ContainerProperties containerProps =
-//                new ContainerProperties(String.valueOf(new TopicPartition(
-//                        "product-qty-update-topic", 0)));
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "103.82.242.61:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "product-update-consumer-group");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class.getName());
-        props.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.kafka.clients.consumer.RoundRobinAssignor");
-
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-
-        containerProps.setMessageListener(this);
-
-        ConsumerFactory<String, String> consumerFactory = new DefaultKafkaConsumerFactory<>(props);
-        return new ConcurrentMessageListenerContainer<>(consumerFactory, containerProps);
-    }
-
-    @Bean
-    public ConcurrentMessageListenerContainer<String, String> messageListenerContainer2() {
-        ContainerProperties containerProps = new ContainerProperties("product-validation-topic");
-//        ContainerProperties containerProps =
-//                new ContainerProperties(String.valueOf(new TopicPartition(
-//                        "product-validation-topic", 0)));
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "103.82.242.61:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "product-validation-consumer-group");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class.getName());
-        props.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.kafka.clients.consumer.RoundRobinAssignor");
-
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-
-        containerProps.setMessageListener(this);
-
-        ConsumerFactory<String, String> consumerFactory = new DefaultKafkaConsumerFactory<>(props);
-        return new ConcurrentMessageListenerContainer<>(consumerFactory, containerProps);
-    }
-
-    @Override
-    public void onMessage(ConsumerRecord<String, String> record) {
-        String key = record.key();
-        String value = record.value();
-        System.out.println("Received message - Key: " + key + ", Value: " + value);
 
     }
 }

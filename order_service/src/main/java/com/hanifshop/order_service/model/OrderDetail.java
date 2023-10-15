@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,5 +43,32 @@ public class OrderDetail {
                 Map.entry("orderId", this.order.getOrderId())
         ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
+
+//    public List<Map<String, Object>> createResponseDetail() {
+//        Map<String, Object> detailMap = Stream.of(
+//                Map.entry("orderDetailId", this.orderDetailId),
+//                Map.entry("productId", this.productId),
+//                Map.entry("quantity", this.quantity),
+//                Map.entry("unitPrice", this.unitPrice),
+//                Map.entry("totalPrice", this.totalPrice)
+//        ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+//
+//        return List.of(detailMap);
+//    }
+
+    public List<OrderDetail> createResponseDetail() {
+        return Stream.of(this)
+                .map(orderDetail -> {
+                    OrderDetail newOrderDetail = new OrderDetail();
+                    newOrderDetail.setOrderDetailId(orderDetail.orderDetailId);
+                    newOrderDetail.setProductId(orderDetail.productId);
+                    newOrderDetail.setQuantity(orderDetail.quantity);
+                    newOrderDetail.setUnitPrice(orderDetail.unitPrice);
+                    newOrderDetail.setTotalPrice(orderDetail.totalPrice);
+                    return newOrderDetail;
+                })
+                .collect(Collectors.toList());
+    }
+
 
 }
