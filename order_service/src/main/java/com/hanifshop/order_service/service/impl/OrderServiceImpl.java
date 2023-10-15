@@ -229,6 +229,21 @@ public class OrderServiceImpl implements OrderService {
         return validationFutures;
     }
 
+    @Override
+    public Map<Long, CompletableFuture<String>> totalOrder() {
+        return null;
+    }
+
+    @Override
+    public Map<Long, CompletableFuture<String>> totalAmount() {
+        return null;
+    }
+
+    @Override
+    public Map<Long, CompletableFuture<String>> productsByStatus() {
+        return null;
+    }
+
     Order checkOrderAvailablity(Long orderId) throws Exception {
         List<Order> orders = orderDao.findByOrderId(orderId);
 
