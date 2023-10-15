@@ -9,20 +9,17 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.jackson.map.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.TopicPartition;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.GenericMessageListener;
 import org.springframework.kafka.listener.MessageListener;
-import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +39,8 @@ public class KafkaConsumer implements MessageListener<String, String> {
     @Autowired
     KafkaProducer kafkaProducer;
 
-    @KafkaListener(id = "product-validation-consumer-group", topics = "product-validation-topic")
+    @KafkaListener(id = "product-validation-consumer", topicPartitions = {
+            @TopicPartition(topic = "product-validation-topic", partitions = { "0" })})
     public void listenGetProduct(ConsumerRecord<String, String> record) {
 
         logger.info("### Message Receive From Topics : product-validation-topic");
@@ -62,7 +60,8 @@ public class KafkaConsumer implements MessageListener<String, String> {
         }
     }
 
-    @KafkaListener(id = "product-update-consumer-group", topics = "product-qty-update-topic")
+    @KafkaListener(id = "product-update-consumer-group", topicPartitions = {
+            @TopicPartition(topic = "product-validation-topic", partitions = { "0" })})
     public void listenUpdateProduct(ConsumerRecord<String, String> record) {
         Map<String, String> data = PojoJsonMapper.fromJson(record.value(), Map.class);
 
@@ -81,13 +80,16 @@ public class KafkaConsumer implements MessageListener<String, String> {
     @Bean
     public ConcurrentMessageListenerContainer<String, String> messageListenerContainer() {
         ContainerProperties containerProps = new ContainerProperties("product-qty-update-topic");
+//        ContainerProperties containerProps =
+//                new ContainerProperties(String.valueOf(new TopicPartition(
+//                        "product-qty-update-topic", 0)));
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "103.82.242.61:9092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "product-update-consumer-group");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class.getName());
+        props.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.kafka.clients.consumer.RoundRobinAssignor");
 
-        // Konfigurasi trusted packages menggunakan spring.kafka.consumer.properties
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
         containerProps.setMessageListener(this);
@@ -99,13 +101,16 @@ public class KafkaConsumer implements MessageListener<String, String> {
     @Bean
     public ConcurrentMessageListenerContainer<String, String> messageListenerContainer2() {
         ContainerProperties containerProps = new ContainerProperties("product-validation-topic");
+//        ContainerProperties containerProps =
+//                new ContainerProperties(String.valueOf(new TopicPartition(
+//                        "product-validation-topic", 0)));
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "103.82.242.61:9092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "product-validation-consumer-group");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class.getName());
+        props.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.kafka.clients.consumer.RoundRobinAssignor");
 
-        // Konfigurasi trusted packages menggunakan spring.kafka.consumer.properties
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
         containerProps.setMessageListener(this);
