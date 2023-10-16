@@ -6,7 +6,6 @@ import com.hanifshop.order_service.model.Order;
 import com.hanifshop.order_service.model.OrderDetail;
 import com.hanifshop.order_service.repository.OrderDao;
 import com.hanifshop.order_service.repository.OrderDetailDao;
-import com.hanifshop.order_service.repository.SessionDao;
 import com.hanifshop.order_service.service.OrderService;
 import com.hanifshop.order_service.stream.KafkaProducer;
 import com.hanifshop.order_service.util.Constant;
@@ -29,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {

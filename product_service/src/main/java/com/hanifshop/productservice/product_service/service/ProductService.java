@@ -21,6 +21,8 @@ public interface ProductService {
     Map<String, Object> UpdateProduct(ProductDto dto);
     Map<String, Object> ListProduct(ProductDto dto);
 
+    Map<String, Object> showStockCache();
+
     Boolean isQtyProductValid(Long productId, int requestedQty);
     Product getProduct(Long productId);
 

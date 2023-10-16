@@ -1,6 +1,7 @@
 package com.hanifshop.productservice.product_service.service.impl;
 
 import com.hanifshop.productservice.product_service.dto.ProductDto;
+import com.hanifshop.productservice.product_service.dto.StockUpdateDto;
 import com.hanifshop.productservice.product_service.stream.KafkaConsumer;
 import com.hanifshop.productservice.product_service.stream.KafkaProducer;
 import com.hanifshop.productservice.product_service.model.Product;
@@ -10,6 +11,10 @@ import com.hanifshop.productservice.product_service.repository.ProductDao;
 import com.hanifshop.productservice.product_service.service.ProductService;
 import com.hanifshop.productservice.product_service.util.Constant;
 import com.hanifshop.productservice.product_service.util.EngineUtils;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteCache;
+import org.apache.ignite.IgniteMessaging;
+import org.apache.ignite.lang.IgniteBiPredicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +26,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +36,7 @@ import java.util.stream.Collectors;
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private final Logger logger =  LogManager.getLogger(ProductServiceImpl.class);
+    private final Logger logger = LogManager.getLogger(ProductServiceImpl.class);
 
     @Autowired
     private ProductCategoryDao productCategoryDao;
@@ -45,6 +47,9 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     ProductDao productDao;
 
+//    @Autowired
+//    private Ignite ignite;
+
     @Override
     public Map<String, Object> AddProductCategory(String categoryName) {
         try {
@@ -54,7 +59,7 @@ public class ProductServiceImpl implements ProductService {
 
             return EngineUtils.createSuccessReponse(200, "success", Constant.ControllerRoute.addCategory);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.addCategory);
         }
@@ -71,7 +76,7 @@ public class ProductServiceImpl implements ProductService {
 
             return EngineUtils.createSuccessReponse(200, "success", Constant.ControllerRoute.deleteCategory);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.deleteCategory);
         }
@@ -89,7 +94,7 @@ public class ProductServiceImpl implements ProductService {
 
             return EngineUtils.createSuccessReponse(200, "success", Constant.ControllerRoute.updateCategory);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.updateCategory);
         }
@@ -100,7 +105,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             List<ProductCategory> listCategory = productCategoryDao.findAll();
 
-            if (listCategory.isEmpty()){
+            if (listCategory.isEmpty()) {
                 return EngineUtils.createSuccessReponse(200, "Product Category is empty", Constant.ControllerRoute.allCategory);
             }
 
@@ -115,7 +120,7 @@ public class ProductServiceImpl implements ProductService {
 
             return EngineUtils.createSuccessReponse(200, categoryList, Constant.ControllerRoute.allCategory);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.allCategory);
         }
@@ -137,9 +142,13 @@ public class ProductServiceImpl implements ProductService {
             product.setUpdatedAt(new Date());
             productDao.save(product);
 
+            //Publish Stock
+            publishStockUpdate(dto.getProductId(), dto.getStockQuantity());
+
+
             return EngineUtils.createSuccessReponse(200, "success", Constant.ControllerRoute.addProduct);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.addProduct);
         }
@@ -152,9 +161,12 @@ public class ProductServiceImpl implements ProductService {
             Product product = checkProductAvailability(dto.getProductId());
             productDao.delete(product);
 
+            //Publish Stock
+            publishStockUpdate(product.getProductId(), 0);
+
             return EngineUtils.createSuccessReponse(200, "success", Constant.ControllerRoute.deleteProduct);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.deleteProduct);
         }
@@ -178,9 +190,12 @@ public class ProductServiceImpl implements ProductService {
             product.setUpdatedAt(new Date());
             productDao.save(product);
 
+            //Publish Stock
+            publishStockUpdate(product.getProductId(), product.getStockQuantity());
+
             return EngineUtils.createSuccessReponse(200, "success", Constant.ControllerRoute.updateProduct);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.updateProduct);
         }
@@ -191,14 +206,14 @@ public class ProductServiceImpl implements ProductService {
         try {
             List<Product> listProduct =
                     dto.getCategoryId() != 0L && dto.getProductId() != 0L ?
-                            productDao.findByProductIdAndCategory(dto.getProductId(), checkCategoryAvailability(dto.getCategoryId())):
-                    dto.getProductId() != 0L ?
-                            productDao.findByProductId(dto.getProductId()) :
-                    dto.getCategoryId() != 0L ?
-                            productDao.findByCategory(checkCategoryAvailability(dto.getCategoryId())) :
-                            productDao.findAll();
+                            productDao.findByProductIdAndCategory(dto.getProductId(), checkCategoryAvailability(dto.getCategoryId())) :
+                            dto.getProductId() != 0L ?
+                                    productDao.findByProductId(dto.getProductId()) :
+                                    dto.getCategoryId() != 0L ?
+                                            productDao.findByCategory(checkCategoryAvailability(dto.getCategoryId())) :
+                                            productDao.findAll();
 
-            if (listProduct.isEmpty()){
+            if (listProduct.isEmpty()) {
                 return EngineUtils.createSuccessReponse(200, "Product is empty", Constant.ControllerRoute.allCategory);
             }
 
@@ -212,16 +227,61 @@ public class ProductServiceImpl implements ProductService {
                         categoryMap.put("stockQuantity", product.getStockQuantity());
                         categoryMap.put("category", product.getCategory());
                         categoryMap.put("lastUpdate", product.getUpdatedAt());
+
+                        //Publish Stock
+                        publishStockUpdate(product.getProductId(), product.getStockQuantity());
+
                         return categoryMap;
                     })
                     .collect(Collectors.toList());
 
+
             return EngineUtils.createSuccessReponse(200, productList, Constant.ControllerRoute.allProduct);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.allProduct);
         }
+    }
+
+    public void publishStockUpdate(Long productId, Integer newStockValue) {
+        logger.info("Attempt to publish stock with ignite");
+
+//        IgniteMessaging messaging = ignite.message();
+//
+//        StockUpdateDto stok = new StockUpdateDto();
+//        stok.setProductId(productId);
+//        stok.setStockQuantity(newStockValue);
+//
+//        messaging.send("stockUpdateTopic", stok);
+    }
+
+    @Override
+    public Map<String, Object> showStockCache() {
+//        IgniteMessaging messaging = ignite.message();
+//        List<Map<String, Object>> listMap = new ArrayList<>();
+//
+//        IgniteBiPredicate<UUID, StockUpdateDto> listener = (nodeId, message) -> {
+//            Long productId = message.getProductId();
+//            Integer newStockValue = message.getStockQuantity();
+//
+//            logger.info("prodcutId = " + productId);
+//            logger.info("newStockValue = " + newStockValue);
+//
+//            Map<String, Object> map = new HashMap<>();
+//
+//            map.put("prodcutId", productId);
+//            map.put("stock", newStockValue);
+//
+//            listMap.add(map);
+//            return true;
+//        };
+//
+//        messaging.remoteListen("stockUpdateTopic", listener);
+
+//        return EngineUtils.createSuccessReponse(200, listMap, "/Cache");
+        return null;
+
     }
 
     @Override
@@ -239,7 +299,7 @@ public class ProductServiceImpl implements ProductService {
     public Product getProduct(Long productId) {
         try {
             return productDao.findByProductId(productId).get(0);
-        }catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
     }
@@ -261,4 +321,6 @@ public class ProductServiceImpl implements ProductService {
 
         return product;
     }
+
+
 }

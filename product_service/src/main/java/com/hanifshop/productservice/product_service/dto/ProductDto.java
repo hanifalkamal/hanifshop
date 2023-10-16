@@ -45,4 +45,12 @@ public class ProductDto extends BaseDto{
         return product;
     }
 
+    public Product toProductUpdateStock() {
+        Product product = new Product();
+
+        product.setProductId(this.getProductId());
+        product.setStockQuantity(this.getStockQuantity());
+        return product;
+    }
+
 }

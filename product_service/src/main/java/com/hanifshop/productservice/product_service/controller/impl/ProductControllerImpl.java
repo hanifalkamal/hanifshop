@@ -107,4 +107,14 @@ public class ProductControllerImpl implements ProductController {
                                 Integer.parseInt(mapping.get("status").toString()))
                         : HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<?> getCache() {
+        Map<String, Object> mapping = productService.showStockCache();
+        return new ResponseEntity<>(mapping,
+                mapping.containsKey("error") ?
+                        HttpStatus.valueOf(
+                                Integer.parseInt(mapping.get("status").toString()))
+                        : HttpStatus.OK);
+    }
 }
