@@ -20,22 +20,17 @@ import java.util.Collections;
 
 @Configuration
 public class IgniteConfig {
-    @Bean(name = "ignite")
+//    @Bean(name = "ignite")
     public Ignite ignite() {
         IgniteConfiguration igniteConfig = new IgniteConfiguration();
-//        igniteConfig.setLifecycleBeans(new IgniteLifeCycle());
-//        igniteConfig.setGridLogger(new Slf4JLogger());
+        igniteConfig.setLifecycleBeans(new IgniteLifeCycle());
         igniteConfig.setClientMode(true);
+        igniteConfig.setPeerClassLoadingEnabled(true);
+        igniteConfig.setPersistentStoreConfiguration(new PersistentStoreConfiguration());
+        TcpDiscoveryMulticastIpFinder ipFinder = new TcpDiscoveryMulticastIpFinder();
+        ipFinder.setAddresses(Collections.singletonList("103.82.242.61:10800"));
+        igniteConfig.setDiscoverySpi(new TcpDiscoverySpi().setIpFinder(ipFinder));
         return Ignition.start(igniteConfig);
-
-//
-//        // Classes of custom Java logic will be transferred over the wire from this app.
-//        igniteConfig.setPeerClassLoadingEnabled(true);
-//        igniteConfig.setPersistentStoreConfiguration(new PersistentStoreConfiguration());
-//        // Setting up an IP Finder to ensure the client can locate the servers.
-//        TcpDiscoveryMulticastIpFinder ipFinder = new TcpDiscoveryMulticastIpFinder();
-//        ipFinder.setAddresses(Collections.singletonList("103.82.242.61:10800"));
-//        igniteConfig.setDiscoverySpi(new TcpDiscoverySpi().setIpFinder(ipFinder));
 //
     }
 

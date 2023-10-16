@@ -54,9 +54,9 @@ public interface ProductController {
             ProductDto productDto, @Token String token
     );
 
-    @GetMapping("/stockCache")
-    ResponseEntity<?> getCache(
-    );
+//    @GetMapping("/stockCache")
+//    ResponseEntity<?> getCache(
+//    );
 
 
 

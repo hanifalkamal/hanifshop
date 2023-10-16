@@ -20,7 +20,7 @@ public class RedisConfig {
     @Bean
     public JedisConnectionFactory connectionFactory(){
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName("localhost");
+        configuration.setHostName("103.82.242.61");
         configuration.setPort(6379);
         JedisClientConfiguration clientConfig = JedisClientConfiguration.builder().usePooling().poolConfig(jedisPoolConfig()).build();
         return new JedisConnectionFactory(configuration, clientConfig);

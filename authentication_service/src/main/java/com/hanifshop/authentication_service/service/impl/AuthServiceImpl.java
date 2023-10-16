@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
-            calendar.add(Calendar.MINUTE, 3);
+            calendar.add(Calendar.MINUTE, 15);
             Date newDate = calendar.getTime();
             authenticationToken.setExpirationTime(newDate);
 

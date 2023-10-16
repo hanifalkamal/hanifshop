@@ -54,8 +54,8 @@ public class OrderServiceImpl implements OrderService {
 
             Order order = orderDto.toOrder();
 
-            if (order.getOrderId() == null)
-                throw new Exception("Order Id not found");
+            if (order.getOrderNumber() == null)
+                throw new Exception("Order number not found");
 
             if (order.getCustomerId() == null)
                 throw new Exception("Customer ID not found");

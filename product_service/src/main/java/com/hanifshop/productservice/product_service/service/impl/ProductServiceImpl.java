@@ -245,7 +245,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public void publishStockUpdate(Long productId, Integer newStockValue) {
-        logger.info("Attempt to publish stock with ignite");
+//        logger.info("Attempt to publish stock with ignite");
 
 //        IgniteMessaging messaging = ignite.message();
 //
