@@ -5,9 +5,28 @@ This project will focus on building a mini e-commerce application with a microse
 
 Component : 
 Spring IoC, 
+
 o Java Stream, 
+
 o Advance Native SQL query, 
+
 o containerization & microservices
+
 o Kafka & Stream Based Application
+
 o Redis, Caching Strategy & Data Grid
+
 o Elastic & Other Non Relational DB
+
+API Documentation : 
+PostmanRestApi.har
+
+Docker Images :
+docker pull hanifalkamal/order
+docker run -d -p 9080:9080 hanifalkamal/order
+
+docker pull hanifalkamal/authentication
+docker run -d -p 9081:9081 hanifalkamal/authentication
+
+docker pull hanifalkamal/product
+docker run -d -p 9082:9082 hanifalkamal/product
