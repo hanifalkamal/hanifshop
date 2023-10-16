@@ -13,6 +13,9 @@ public class Constant {
         public static final String updateOrder  = "/order/update";
         public static final String orderTotalPrice  = "/order/total";
         public static final String payOrder  = "/order/pay";
+        public static final String listOrderByStatus  = "/order/detail/list/status";
+        public static final String totalOrder  = "/order/totalorder";
+        public static final String totalAmount  = "/order/totalamount";
     }
 
     public static class STATUS{

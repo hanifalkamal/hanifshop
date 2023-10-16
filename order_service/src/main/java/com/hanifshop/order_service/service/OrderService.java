@@ -20,8 +20,12 @@ public interface OrderService {
 
     Map<String, Object> executeCreateOrderDetail(OrderDetailDto dto);
     Map<Long, CompletableFuture<String>> getValidationFutures();
-    Map<Long, CompletableFuture<String>> totalOrder();
-    Map<Long, CompletableFuture<String>> totalAmount();
+
+    Map<String, Object> totalOrder(OrderDto orderDto);
+    Map<String, Object> totalAmount(OrderDto orderDto);
+
+    Map<String, Object> listOrderByStatus(OrderDto orderDto);
+
     Map<Long, CompletableFuture<String>> productsByStatus();
 
 

@@ -24,6 +24,24 @@ public interface OrderController {
             @Token String token
     );
 
+    @GetMapping(Constant.ControllerRoute.listOrderByStatus)
+    ResponseEntity<?> listOrderByStatus(
+            OrderDto orderDto,
+            @Token String token
+    );
+
+    @GetMapping(Constant.ControllerRoute.totalOrder)
+    ResponseEntity<?> totalOrder(
+            OrderDto orderDto,
+            @Token String token
+    );
+
+    @GetMapping(Constant.ControllerRoute.totalAmount)
+    ResponseEntity<?> totalAmount(
+            OrderDto orderDto,
+            @Token String token
+    );
+
 
     @PostMapping(Constant.ControllerRoute.createOrder)
     ResponseEntity<?> createOrder(

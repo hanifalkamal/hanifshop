@@ -33,6 +33,39 @@ public class OrderControllerImpl implements OrderController {
                         : HttpStatus.OK);
     }
 
+    @ValidateSession
+    @Override
+    public ResponseEntity<?> listOrderByStatus(OrderDto orderDto, String token) {
+        Map<String, Object> mapping = orderService.listOrderByStatus(orderDto);
+        return new ResponseEntity<>(mapping,
+                mapping.containsKey("error") ?
+                        HttpStatus.valueOf(
+                                Integer.parseInt(mapping.get("status").toString()))
+                        : HttpStatus.OK);
+    }
+
+    @ValidateSession
+    @Override
+    public ResponseEntity<?> totalOrder(OrderDto orderDto, String token) {
+        Map<String, Object> mapping = orderService.totalOrder(orderDto);
+        return new ResponseEntity<>(mapping,
+                mapping.containsKey("error") ?
+                        HttpStatus.valueOf(
+                                Integer.parseInt(mapping.get("status").toString()))
+                        : HttpStatus.OK);
+    }
+
+    @ValidateSession
+    @Override
+    public ResponseEntity<?> totalAmount(OrderDto orderDto, String token) {
+        Map<String, Object> mapping = orderService.totalAmount(orderDto);
+        return new ResponseEntity<>(mapping,
+                mapping.containsKey("error") ?
+                        HttpStatus.valueOf(
+                                Integer.parseInt(mapping.get("status").toString()))
+                        : HttpStatus.OK);
+    }
+
     @Override
     @ValidateSession
     public ResponseEntity<?> createOrder(OrderDto orderDto, String token) {

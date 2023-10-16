@@ -110,25 +110,8 @@ public class OrderServiceImpl implements OrderService {
                                             orderDao.findByCustomerId(orderDto.getCustomerId()) :
                                             orderDao.findAll();
 
-
-
-            List<Map<String, Object>> orderlist = orders.stream()
-                    .map(order -> {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("orderId", order.getOrderId());
-                        map.put("customerId", order.getCustomerId());
-                        map.put("orderNumber", order.getOrderNumber());
-                        map.put("statusOrder", order.getStatus());
-                        map.put("orderDate", order.getOrderDate());
-                        map.put("totalAmountOrder", order.getTotalAmount());
-                        map.put("orderDetail", orderDetailDao.findByOrder_OrderId(order.getOrderId()) == null
-                                ? "[]" : orderDetailforList(orderDetailDao.findByOrder_OrderId(order.getOrderId()))  );
-                        return map;
-                    })
-                    .collect(Collectors.toList());
-
             return EngineUtils.createSuccessReponse(200,
-                    orderlist, Constant.ControllerRoute.listOrder);
+                    EngineUtils.toListMap(orders, orderDetailDao), Constant.ControllerRoute.listOrder);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -152,7 +135,10 @@ public class OrderServiceImpl implements OrderService {
             if (dto.getQuantity() == 0)
                 throw new Exception("Qty is mandatory");
 
-            checkOrderAvailablity(dto.getOrderId());
+            Order order = checkOrderAvailablity(dto.getOrderId());
+
+            if (!order.getStatus().equals(Constant.STATUS.PENDING))
+                throw new Exception("Unable to add order : " + order.getStatus());
 
             HttpHeaders requestHeaders = new HttpHeaders();
             requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -230,13 +216,52 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Map<Long, CompletableFuture<String>> totalOrder() {
-        return null;
+    public Map<String, Object> totalOrder(OrderDto dto) {
+        logger.info("Attempt to count totalOrder");
+
+        try {
+            Map<String, Object> map = new HashMap<>();
+            map.put("totalOrder", orderDao.countTotalOrdersByCustomer(dto.getCustomerId()));
+
+            return EngineUtils.createSuccessReponse(200, map, Constant.ControllerRoute.totalOrder);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.totalOrder);
+        }
     }
 
     @Override
-    public Map<Long, CompletableFuture<String>> totalAmount() {
-        return null;
+    public Map<String, Object> totalAmount(OrderDto dto) {
+        logger.info("Attempt to count totalAmount");
+
+        try {
+            Map<String, Object> map = new HashMap<>();
+            map.put("totalAmount", orderDao.sumTotalAmountByCustomer(dto.getCustomerId()));
+
+            return EngineUtils.createSuccessReponse(200, map, Constant.ControllerRoute.totalAmount);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.totalAmount);
+        }
+    }
+
+    @Override
+    public Map<String, Object> listOrderByStatus(OrderDto dto) {
+        logger.info("Attempt to remove Order Detail");
+
+        try {
+            if (!dto.getStatus().equals(Constant.STATUS.PENDING) &&
+                    !dto.getStatus().equals(Constant.STATUS.DISPOSE) &&
+                    !dto.getStatus().equals(Constant.STATUS.SUCCESS) )
+                throw new Exception("Status unknow");
+
+            List<Order> orders = orderDao.findOrdersByStatusAndLatestOrderDate(dto.getStatus());
+
+            return EngineUtils.createSuccessReponse(200, EngineUtils.toListMap(orders, orderDetailDao), Constant.ControllerRoute.listOrderByStatus);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return EngineUtils.createFailedReponse(500, e.getMessage(), Constant.ControllerRoute.listOrderByStatus);
+        }
     }
 
     @Override
@@ -253,18 +278,5 @@ public class OrderServiceImpl implements OrderService {
         return orders.get(0);
     }
 
-    public List<OrderDetailDto> orderDetailforList(List<OrderDetail> orders) {
-        return orders.stream()
-                .map(orderDetail -> {
-                    OrderDetailDto newOrderDetail = new OrderDetailDto();
-                    newOrderDetail.setOrderDetailId(orderDetail.getOrderDetailId());
-                    newOrderDetail.setProductId(orderDetail.getProductId());
-                    newOrderDetail.setQuantity(orderDetail.getQuantity());
-                    newOrderDetail.setUnitPrice(orderDetail.getUnitPrice());
-                    newOrderDetail.setTotalPrice(orderDetail.getTotalPrice());
-                    newOrderDetail.setOrderId(orderDetail.getOrder().getOrderId());
-                    return newOrderDetail;
-                })
-                .collect(Collectors.toList());
-    }
+
 }
