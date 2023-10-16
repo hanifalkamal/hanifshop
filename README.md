@@ -18,15 +18,25 @@ o Redis, Caching Strategy & Data Grid
 
 o Elastic & Other Non Relational DB
 
+
+
 API Documentation : 
 PostmanRestApi.har
 
+
 Docker Images :
+
+
 docker pull hanifalkamal/order
+
 docker run -d -p 9080:9080 hanifalkamal/order
 
+
 docker pull hanifalkamal/authentication
+
 docker run -d -p 9081:9081 hanifalkamal/authentication
 
+
 docker pull hanifalkamal/product
+
 docker run -d -p 9082:9082 hanifalkamal/product
